@@ -4,4 +4,4 @@ In this case study, we will perform data analysis for Cyclistic - a fictional bi
 
 Data Source: https://divvy-tripdata.s3.amazonaws.com/index.html
 
-Tools used: Excel (Power Query), Microsoft SQL Server, Tableau
+Tools used: Excel (Power Query), Microsoft SQL Server, Tableau.
