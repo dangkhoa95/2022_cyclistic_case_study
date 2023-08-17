@@ -1,0 +1,24 @@
+let
+    Source = Folder.Files("C:\Users\khoa.dang.phan\OneDrive - Cong ty TNHH Duoc Pham GIGAMED\Desktop\Google Data Analytics\case_study\cyclistic_case_study\working_data\2022_data"),
+    #"Filtered Hidden Files1" = Table.SelectRows(Source, each [Attributes]?[Hidden]? <> true),
+    #"Invoke Custom Function1" = Table.AddColumn(#"Filtered Hidden Files1", "Transform File", each #"Transform File"([Content])),
+    #"Renamed Columns1" = Table.RenameColumns(#"Invoke Custom Function1", {"Name", "Source.Name"}),
+    #"Removed Other Columns1" = Table.SelectColumns(#"Renamed Columns1", {"Source.Name", "Transform File"}),
+    #"Expanded Table Column1" = Table.ExpandTableColumn(#"Removed Other Columns1", "Transform File", Table.ColumnNames(#"Transform File"(#"Sample File"))),
+    #"Changed Type" = Table.TransformColumnTypes(#"Expanded Table Column1",{{"ride_id", type text}, {"rideable_type", type text}, {"started_at", type datetime}, {"ended_at", type datetime}, {"start_station_name", type text}, {"start_station_id", type text}, {"end_station_name", type text}, {"end_station_id", type text}, {"start_lat", type number}, {"start_lng", type number}, {"end_lat", type number}, {"end_lng", type number}, {"member_casual", type text}}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Changed Type",{"ride_id", "rideable_type", "started_at", "ended_at", "start_station_name", "start_station_id", "end_station_name", "end_station_id", "start_lat", "start_lng", "end_lat", "end_lng", "member_casual"}),
+    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+    #"Removed Blank Rows" = Table.SelectRows(#"Removed Duplicates", each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null}))),
+    #"Trimmed Text" = Table.TransformColumns(#"Removed Blank Rows",{{"ride_id", Text.Trim, type text}, {"rideable_type", Text.Trim, type text}, {"start_station_name", Text.Trim, type text}, {"start_station_id", Text.Trim, type text}, {"end_station_name", Text.Trim, type text}, {"end_station_id", Text.Trim, type text}, {"member_casual", Text.Trim, type text}}),
+    #"Added Custom" = Table.AddColumn(#"Trimmed Text", "ride_length", each [ended_at]-[started_at]),
+    #"Calculated Total Minutes" = Table.TransformColumns(#"Added Custom",{{"ride_length", Duration.TotalMinutes, type number}}),
+    #"Renamed Columns" = Table.RenameColumns(#"Calculated Total Minutes",{{"ride_length", "ride_length_in_minutes"}}),
+    #"Added Custom1" = Table.AddColumn(#"Renamed Columns", "day_of_week", each Date.DayOfWeekName([started_at])),
+    #"Changed Type2" = Table.TransformColumnTypes(#"Added Custom1",{{"day_of_week", type text}}),
+    #"Filtered Rows" = Table.SelectRows(#"Changed Type2", each [ride_length_in_minutes] >= 0 and [start_station_name] <> "HQ QR"),
+    #"Added Custom2" = Table.AddColumn(#"Filtered Rows", "month", each Date.MonthName([started_at])),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom2",{{"month", type text}}),
+    #"Removed Other Columns2" = Table.SelectColumns(#"Changed Type1",{"rideable_type", "started_at", "ended_at", "member_casual", "ride_length_in_minutes", "day_of_week", "month"}),
+    #"Reordered Columns" = Table.ReorderColumns(#"Removed Other Columns2",{"month", "member_casual", "rideable_type", "started_at", "ended_at", "day_of_week", "ride_length_in_minutes"})
+in
+    #"Reordered Columns"
